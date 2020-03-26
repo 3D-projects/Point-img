@@ -1,0 +1,31 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+canvas {
+    display: none;
+}
+
+.container canvas {
+    display: block;
+}
+
+.btn {
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+    min-width: 100px;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .btn {
+        display: block;
+    }
+}

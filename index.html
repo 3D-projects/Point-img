@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/OBJLoader.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
+</head>
+<body>
+<script type="x-shader/x-vertex" id="particle-vs">
+    //precision highp float;
+
+    attribute vec3 position;
+    attribute vec2 source;
+    attribute vec2 target;
+
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    uniform float size;
+    uniform float blend;
+    uniform float direction;
+
+    uniform sampler2D sourceTex;
+    uniform sampler2D targetTex;
+
+    uniform vec2 dimensions;
+    varying vec3 vColor;
+    const float PI = 3.14159265359;
+
+    varying vec2 texcoord;
+
+    void main() {
+        float pBlend = clamp( blend, 0., 1. );
+        vec3 origin = vec3(source, 0.);
+        vec3 destination = vec3(target, 0.);
+        vec3 p = mix( origin, destination, pBlend );
+
+        vec3 d = ( destination - origin );
+        float r = length(d);
+        p.xy = mix(origin.xy,destination.xy,pBlend);
+
+        //if (mod(p.x, 1.0) > 0.5) {
+        //   p.z = .5 * r * sin(pBlend*PI);
+        //} else {
+        //   p.z = .5 * r * sin(-pBlend*PI);
+        //}
+
+        p.z = .5 * r * sin(pBlend*PI);
+        p.z = 0.;
+
+        p.xy -= .5 * dimensions;
+        p *= 1. / dimensions.x;
+        vec2 uvSource = source / dimensions.x;
+        vec2 uvTarget = target / dimensions.x;
+
+        vColor = mix( texture2D(sourceTex,uvSource).rgb, texture2D(targetTex,uvTarget).rgb, pBlend );
+        float scale = 1.;
+        p.y *= -1.;
+        vec4 mvPosition = modelViewMatrix * vec4( p, 1. );
+
+        gl_PointSize = size * ( scale / - mvPosition.z );
+        gl_Position = projectionMatrix * mvPosition;
+
+        //texcoord = uv;
+        //texcoord = gl_PointSize;
+    }
+</script>
+<script type="x-shader/x-fragment" id="particle-fs">
+    precision highp float;
+    varying vec3 vColor;
+    uniform sampler2D u_texture;
+    uniform sampler2D u_texture_1;
+    uniform vec2 u_cor;
+
+    //varying vec2 texcoord;
+
+    void main() {
+        vec2 xy = gl_FragCoord.xy / u_cor.xy;
+        //vec2 xy = gl_FragCoord.xy / texcoord_uv.xy;
+
+        vec2 gt = gl_PointCoord;
+        gt.y = 1.0 - gt.y;
+
+        vec4 damm_mane = texture2D(u_texture, xy);
+        vec4 damm_1 = texture2D(u_texture_1, gt);
+
+        if (damm_1.r < 0.1) {
+            damm_mane = vec4(0., 0., 0., 0.);
+            //damm_mane = vec4(clamp(0.0, 0.0, 0.0), 0.0);
+        }
+
+        gl_FragColor = damm_mane;
+
+        //gl_FragColor = vec4(vColor, 1.);
+    }
+</script>
+</script>
+</body>
+    <button id="btn" class="btn">Click</button>
+    <div id="container" class="container">
+
+    </div>
+</body>
+<script src="js/script.js"></script>
+</html>
